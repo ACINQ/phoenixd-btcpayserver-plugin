@@ -2,7 +2,7 @@
 
 # ⚡Phoenixd lightning support plugin⚡
 
-This plugin enables lightning payments in BTCPay Server through your local **phoenixd** instance.
+This plugin enables lightning payments in BTCPay Server through your local **phoenixd** instance.<br>
 **phoenixd** is the server equivalent of the popular [phoenix wallet](https://github.com/ACINQ/phoenix) for mobile.
 
 ## Build for Windows 11
@@ -26,14 +26,14 @@ The Phoenixd plugin should now be located in `./plugin/BTCPayServer.Plugins.Phoe
 ```
 type=phoenixd;server=http://<IP>:<PORT>/;password=<PASSWORD>
 ```
-Replace `<IP>:<PORT>` with your phoenixd server's address. If BTCPay Server is running inside a Docker container, the host IP might be `172.17.0.1`.
+Replace `<IP>:<PORT>` with your phoenixd server's address. If BTCPay Server is running inside a Docker container, IP should be `host.docker.internal`.<br>
 Replace `<PASSWORD>` with the `http-password` generated in your `~/.phoenix/phoenix.conf` file.
 
 Once the Phoenixd plugin is successfully loaded, no further configuration is required. You should now be able to receive lightning payments (through Phoenixd) in BTCPay Server. 🚀
 
 ## FAQ
-**Q: I get the error `Error while connecting to the API: Connection refused` when using `Test connection` in BTCPay Server.**
+**Q: I get the error `Error while connecting to the API: Connection refused` when using `Test connection` in BTCPay Server.**<br>
 **A:** The provided IP or port is invalid. Ensure that Phoenixd is running and IP/port is accessible (especially if BTCPay Server is running inside a Docker container).
 
-**Q: I get the error `Error while connecting to the API: Error parsing Infinity value. Path '', line 1, position 2.` when using `Test connection` in BTCPay Server.**
+**Q: I get the error `Error while connecting to the API: Error parsing Infinity value. Path '', line 1, position 2.` when using `Test connection` in BTCPay Server.**<br>
 **A:** This error is usually due to an invalid password for Phoenixd. Check the `http-password` generated in your `~/.phoenix/phoenix.conf` file.
