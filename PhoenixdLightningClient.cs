@@ -196,7 +196,7 @@ namespace BTCPayServer.Lightning.Phoenixd
             var offchain = new OffchainBalance
             {
                 Opening = 0,
-                Local = new LightMoney(balance.balanceSat, LightMoneyUnit.Satoshi),
+                Local = new LightMoney(balance.balanceSat + balance.feeCreditSat, LightMoneyUnit.Satoshi),
                 Remote = 0,
                 Closing = 0
             };

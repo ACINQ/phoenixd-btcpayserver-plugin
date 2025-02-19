@@ -6,5 +6,8 @@ namespace BTCPayServer.Lightning.Phoenixd.Models
     {
         [JsonProperty("balanceSat")]
         public long balanceSat { get; set; }
+
+        [JsonProperty("feeCreditSat")]
+        public long feeCreditSat { get; set; }
     }
 }
