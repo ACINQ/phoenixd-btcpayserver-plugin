@@ -5,6 +5,10 @@
 This plugin enables lightning payments in BTCPay Server through your local **phoenixd** instance.<br>
 **phoenixd** is the server equivalent of the popular [phoenix wallet](https://github.com/ACINQ/phoenix) for mobile.
 
+## Requirements
+- [BTCPay Server >= 1.12.0](https://github.com/btcpayserver)
+- [phoenixd >= v0.5.0](https://github.com/ACINQ/phoenixd)
+
 ## Build for Windows 11
 If .NET is not yet installed:
 ```shell
@@ -14,9 +18,9 @@ To build the plugin:
 ```shell
 git clone https://github.com/btcpayserver/btcpayserver.git
 git clone https://github.com/ACINQ/phoenixd-btcpayserver-plugin.git
-dotnet build btcpayserver
-dotnet build phoenixd-btcpayserver-plugin
-dotnet run --project ./btcpayserver/BTCPayServer.PluginPacker/BTCPayServer.PluginPacker.csproj -- ./phoenixd-btcpayserver-plugin/bin/Debug/net8.0/ BTCPayServer.Plugins.Phoenixd ./plugin
+dotnet build --configuration Release -p:DebugType=None -p:DebugSymbols=false -p:DefineConstants="RAZOR_COMPILE_ON_BUILD" btcpayserver
+dotnet build --configuration Release -p:DebugType=None -p:DebugSymbols=false -p:DefineConstants="RAZOR_COMPILE_ON_BUILD" phoenixd-btcpayserver-plugin
+dotnet run --project ./btcpayserver/BTCPayServer.PluginPacker/BTCPayServer.PluginPacker.csproj -- ./phoenixd-btcpayserver-plugin/bin/Release/net8.0/ BTCPayServer.Plugins.Phoenixd ./plugin
 ```
 The Phoenixd plugin should now be located in `./plugin/BTCPayServer.Plugins.Phoenixd/<VERSION>/`
 
