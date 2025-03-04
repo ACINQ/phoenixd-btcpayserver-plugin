@@ -80,7 +80,7 @@ namespace BTCPayServer.Lightning.Phoenixd
         public async Task<GetOutgoingPaymentResponse> GetOutgoingPayment(string paymentHash, string invoice = null,
             CancellationToken cts = default)
         {
-            return await SendCommandAsync<NoRequestModel, GetOutgoingPaymentResponse>($"payments/outgoingbyhash?paymentHash={paymentHash}", NoRequestModel.Instance, cts, true);
+            return await SendCommandAsync<NoRequestModel, GetOutgoingPaymentResponse>($"payments/outgoingbyhash/{paymentHash}", NoRequestModel.Instance, cts, true);
         }
 
         JsonSerializer _Serializer;
