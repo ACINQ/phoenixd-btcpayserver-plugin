@@ -18,5 +18,8 @@ namespace BTCPayServer.Lightning.Phoenixd.Models
 
         [JsonProperty("paymentPreimage")]
         public string PaymentPreimage { get; set; }
+
+        [JsonProperty("reason")]
+        public string Reason { get; set; }
     }
 }

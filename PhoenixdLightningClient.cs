@@ -230,6 +230,10 @@ namespace BTCPayServer.Lightning.Phoenixd
                             Status = LightningPaymentStatus.Complete
                         });
                 }
+                else if (info.Reason is not null)
+                {
+                    return new PayResponse(PayResult.Error, info.Reason);
+                }
             }
             catch (PhoenixdClient.PhoenixdApiException exception)
             {
