@@ -1,0 +1,37 @@
+@model BTCPayServer.Lightning.Phoenixd.Controllers.LightningPaymentViewModel
+
+<h3>Send part of lightning balance to a Bitcoin address (on-chain)</h3>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<form method="post" asp-action="send" novalidate>
+    <div class="form-group">
+        <label asp-for="BitcoinAddress">Bitcoin address</label>
+        <input asp-for="BitcoinAddress" name="BitcoinAddress" class="form-control" />
+        <span asp-validation-for="BitcoinAddress" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Amount">Amount (sats)</label>
+        <input asp-for="Amount" name="Amount" class="form-control" />
+        <span asp-validation-for="Amount" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Feerate">Feerate (sats/vbyte)</label>
+        <input asp-for="Feerate" name="Feerate" class="form-control" />
+        <span asp-validation-for="Feerate" class="text-danger"></span>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger">
+            @Html.ValidationSummary()
+        </div>
+    }
+
+    <button type="submit" class="btn btn-primary">Send payment</button>
+</form>

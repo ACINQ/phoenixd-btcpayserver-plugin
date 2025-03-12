@@ -83,6 +83,18 @@ namespace BTCPayServer.Lightning.Phoenixd
             return await SendCommandAsync<NoRequestModel, GetOutgoingPaymentResponse>($"payments/outgoingbyhash/{paymentHash}", NoRequestModel.Instance, cts, true);
         }
 
+        public async Task<SendPaymentResponse> SendPayment(string address, long amountSat, long feerateSat,
+            CancellationToken cts = default)
+        {
+            return await SendCommandAsync<SendPaymentRequest, SendPaymentResponse>($"sendtoaddress",
+                new SendPaymentRequest
+                {
+                    AmountSat = amountSat,
+                    Address = address,
+                    FeerateSatByte = feerateSat
+                }, cts);
+        }
+
         JsonSerializer _Serializer;
         JsonSerializerSettings _SerializerSettings;
         JsonSerializerSettings SerializerSettings

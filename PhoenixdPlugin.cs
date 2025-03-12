@@ -22,6 +22,7 @@ public class PhoenixdPlugin : BaseBTCPayServerPlugin
 
     public override void Execute(IServiceCollection services)
     {
+        services.AddSingleton<IUIExtension>(new UIExtension("PhoenixdNavItem", "header-nav"));
         services.AddSingleton<ILightningConnectionStringHandler>(sp =>
         {
             var httpClient = sp.GetRequiredService<HttpClient>();
