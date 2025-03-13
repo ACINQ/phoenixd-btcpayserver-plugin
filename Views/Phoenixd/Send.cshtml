@@ -2,10 +2,14 @@
 
 <h3>Send part of lightning balance to a Bitcoin address (on-chain)</h3>
 
+<div class="alert alert-info text-center">
+    <strong>Lightning Balance:</strong> @Model.LightningBalance sats
+</div>
+
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">
-        @TempData["SuccessMessage"]
+        @Html.Raw(TempData["SuccessMessage"])
     </div>
 }
 

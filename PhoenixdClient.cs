@@ -83,10 +83,10 @@ namespace BTCPayServer.Lightning.Phoenixd
             return await SendCommandAsync<NoRequestModel, GetOutgoingPaymentResponse>($"payments/outgoingbyhash/{paymentHash}", NoRequestModel.Instance, cts, true);
         }
 
-        public async Task<SendPaymentResponse> SendPayment(string address, long amountSat, long feerateSat,
+        public async Task<string> SendPayment(string address, long amountSat, long feerateSat,
             CancellationToken cts = default)
         {
-            return await SendCommandAsync<SendPaymentRequest, SendPaymentResponse>($"sendtoaddress",
+            return await SendCommandAsync<SendPaymentRequest, string>($"sendtoaddress",
                 new SendPaymentRequest
                 {
                     AmountSat = amountSat,
@@ -157,12 +157,30 @@ retry:
                 var rawJson = await rawResult.Content.ReadAsStringAsync();
                 if (!rawResult.IsSuccessStatusCode)
                 {
-                    throw new PhoenixdApiException
+                    PhoenixdApiError apiError = null;
+
+                    try
                     {
-                        Error = JsonConvert.DeserializeObject<PhoenixdApiError>(rawJson, SerializerSettings)
-                    };
+                        apiError = JsonConvert.DeserializeObject<PhoenixdApiError>(rawJson, SerializerSettings);
+                    }
+                    catch
+                    {
+                        apiError = new PhoenixdApiError { Error = rawJson };
+                    }
+
+                    throw new PhoenixdApiException { Error = apiError };
                 }
-                return JsonConvert.DeserializeObject<TResponse>(rawJson, SerializerSettings);
+
+                try
+                {
+                    return JsonConvert.DeserializeObject<TResponse>(rawJson, SerializerSettings);
+                }
+                catch
+                {
+                    if (typeof(TResponse) == typeof(string))
+                        return (TResponse)(object)rawJson;
+                    throw new PhoenixdApiException { Error = new PhoenixdApiError { Error = rawJson } };
+                }
             }
             catch (HttpRequestException e) when (e.InnerException is IOException && retry < 10)
             {
