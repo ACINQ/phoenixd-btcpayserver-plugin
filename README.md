@@ -36,8 +36,11 @@ Replace `<PASSWORD>` with the `http-password` generated in your `~/.phoenix/phoe
 Once the Phoenixd plugin is successfully loaded, no further configuration is required. You should now be able to receive lightning payments (through Phoenixd) in BTCPay Server. 🚀
 
 ## FAQ
-**Q: I get the error `Error while connecting to the API: Connection refused` when using `Test connection` in BTCPay Server.**<br>
+**Q: How do I send an on-chain payment from my Lightning balance?**<br>
+**A:** Go to Plugins > Phoenixd Bitcoin Payment to send an on-chain payment.
+
+**Q: I get the error `Error while connecting to the API: Connection refused` when using `Test connection`.**<br>
 **A:** The provided IP or port is invalid. Ensure that Phoenixd is running and IP/port is accessible (especially if BTCPay Server is running inside a Docker container).
 
-**Q: I get the error `Error while connecting to the API: Error parsing Infinity value. Path '', line 1, position 2.` when using `Test connection` in BTCPay Server.**<br>
+**Q: I get the error `Error while connecting to the API: Invalid authentication (use basic auth with the http password set in phoenix.conf)` when using `Test connection`.**<br>
 **A:** This error is usually due to an invalid password for Phoenixd. Check the `http-password` generated in your `~/.phoenix/phoenix.conf` file.
