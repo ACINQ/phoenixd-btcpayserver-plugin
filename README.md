@@ -6,7 +6,7 @@ This plugin enables lightning payments in BTCPay Server through your local **pho
 **phoenixd** is the server equivalent of the popular [phoenix wallet](https://github.com/ACINQ/phoenix) for mobile.
 
 ## Requirements
-- [BTCPay Server >= 1.12.0](https://github.com/btcpayserver)
+- [BTCPay Server >= 2.0.0](https://github.com/btcpayserver)
 - [phoenixd >= v0.5.0](https://github.com/ACINQ/phoenixd)
 
 ## Build for Windows 11
