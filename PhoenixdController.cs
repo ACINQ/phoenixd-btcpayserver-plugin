@@ -34,6 +34,7 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
         public long Feerate { get; set; }
 
         public long LightningBalance { get; set; }
+        public long LightningFeeCredit { get; set; }
     }
 
     [Route("~/plugins/phoenixd")]
@@ -46,11 +47,13 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
             try
             {
                 var balance = await _phoenixdClient.GetBalance();
-                model.LightningBalance = balance.balanceSat + balance.feeCreditSat;
+                model.LightningBalance = balance.balanceSat;
+                model.LightningFeeCredit = balance.feeCreditSat;
             }
             catch (Exception)
             {
                 model.LightningBalance = 0;
+                model.LightningFeeCredit = 0;
             }
             return model;
         }
