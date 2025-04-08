@@ -24,14 +24,79 @@ dotnet run --project ./btcpayserver/BTCPayServer.PluginPacker/BTCPayServer.Plugi
 ```
 The Phoenixd plugin should now be located in `./plugin/BTCPayServer.Plugins.Phoenixd/<VERSION>/`
 
+## Setup phoenixd as a Docker fragment when using btcpayserver-docker (optional)
+Save Docker file of `phoenixd` as `Dockerfile`:
+```Dockerfile
+FROM debian:bookworm-slim
+ARG PHOENIXD_VERSION=0.5.1
+ENV PHOENIXD_VERSION=${PHOENIXD_VERSION}
+ENV PHOENIXD_URL=https://github.com/ACINQ/phoenixd/releases/download/v${PHOENIXD_VERSION}/phoenixd-${PHOENIXD_VERSION}-linux-x64.zip
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    unzip \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /opt/phoenixd && \
+    curl -L ${PHOENIXD_URL} -o /tmp/phoenixd.zip && \
+    unzip /tmp/phoenixd.zip -d /opt/phoenixd && \
+    mv /opt/phoenixd/phoenixd-${PHOENIXD_VERSION}-linux-x64/* /opt/phoenixd && \
+    chmod +x /opt/phoenixd/phoenixd /opt/phoenixd/phoenix-cli && \
+    rm -rf /tmp/phoenixd.zip /opt/phoenixd/phoenixd-${PHOENIXD_VERSION}-linux-x64
+WORKDIR /opt/phoenixd
+EXPOSE 9740
+```
+Build Docker image for `phoenixd`:
+```shell
+docker build -t phoenixd --build-arg PHOENIXD_VERSION=0.5.1 - < Dockerfile
+```
+Save YAML fragment for `phoenixd` as `btcpayserver-docker/docker-compose-generator/docker-fragments/phoenixd.yml`:
+```yaml
+version: "1"
+services:
+  phoenixd:
+    image: phoenixd:latest
+    container_name: phoenixd
+    restart: unless-stopped
+    networks:
+      - default
+    command: ["./phoenixd", "--agree-to-terms-of-service", "--http-bind-ip=0.0.0.0", "--chain=${NBITCOIN_NETWORK:-regtest}"]
+    expose:
+      - "9740"
+    depends_on:
+      - btcpayserver
+    volumes:
+      - "phoenixd_datadir:/root/.phoenix"
+volumes:
+  phoenixd_datadir:
+```
+Build docker fragment for `phoenixd`:
+```shell
+cd btcpayserver-docker/
+./btcpay-down.sh
+sudo su -
+. ./btcpay-setup.sh -i
+```
+⚠️ **Warning**: Make sure to save the `phoenixd` seed in a safe place after the Docker container is running:
+```shell
+docker exec -it phoenixd cat /root/.phoenix/seed.dat
+```
+You can also restore a previous seed by overwriting this file and restarting BTCPay Server (optional):
+```shell
+echo "<SEED>" | docker exec -i phoenixd tee /root/.phoenix/seed.dat > /dev/null
+cd btcpayserver-docker/
+./btcpay-restart.sh
+```
+
 ## Install
 1. Install the plugin through BTCPay Server web interface Plugins > Manage Plugins > Upload Plugin (locate your `BTCPayServer.Plugins.Phoenixd.btcpay`) and restart
 2. Configure the plugin in Wallets > Lightning > Connection configuration for your custom Lightning node:
 ```
 type=phoenixd;server=http://<IP>:<PORT>/;password=<PASSWORD>
 ```
-Replace `<IP>:<PORT>` with your phoenixd server's address. If BTCPay Server is running inside a Docker container, IP should be `host.docker.internal`.<br>
-Replace `<PASSWORD>` with the `http-password` generated in your `~/.phoenix/phoenix.conf` file.
+Replace `<IP>:<PORT>` with your phoenixd server's address. When running BTCPay Server in Docker with the phoenixd fragment, use `phoenixd:9740` as the host and port (default).<br>
+Replace `<PASSWORD>` with the `http-password` generated in your `~/.phoenix/phoenix.conf` or `/root/.phoenix/phoenix.conf` file (with the phoenixd fragment).
 
 Once the Phoenixd plugin is successfully loaded, no further configuration is required. You should now be able to receive lightning payments (through Phoenixd) in BTCPay Server. 🚀
 
