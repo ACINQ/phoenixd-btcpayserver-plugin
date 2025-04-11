@@ -36,15 +36,6 @@ public class PhoenixdConnectionStringHandler : ILightningConnectionStringHandler
 
         kv.TryGetValue("username", out var username);
         kv.TryGetValue("password", out var password);
-        if (kv.TryGetValue("bitcoin-host", out var bitcoinHost))
-        {
-            if (!kv.TryGetValue("bitcoin-auth", out var bitcoinAuth))
-            {
-                error =
-                    $"The key 'bitcoin-auth' is mandatory for Phoenixd connection strings when bitcoin-host is specified";
-                return null;
-            }
-        }
 
         error = null;
         return new PhoenixdLightningClient(Phoenixduri, username, password, network, _httpClient);
