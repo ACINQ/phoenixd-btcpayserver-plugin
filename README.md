@@ -80,11 +80,11 @@ sudo su -
 ```
 ⚠️ **Warning**: Make sure to save the `phoenixd` seed in a safe place after the Docker container is running:
 ```shell
-docker exec -it phoenixd cat /root/.phoenix/seed.dat
+docker exec -it phoenixd cat /root/.phoenix/seed.dat > backup_seed.dat
 ```
 You can also restore a previous seed by overwriting this file and restarting BTCPay Server (optional):
 ```shell
-echo "<SEED>" | docker exec -i phoenixd tee /root/.phoenix/seed.dat > /dev/null
+docker exec -i phoenixd tee /root/.phoenix/seed.dat < backup_seed.dat > /dev/null
 cd btcpayserver-docker/
 ./btcpay-restart.sh
 ```
