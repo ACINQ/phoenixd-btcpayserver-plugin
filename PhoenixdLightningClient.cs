@@ -20,6 +20,19 @@ namespace BTCPayServer.Lightning.Phoenixd
         private readonly PhoenixdClient _PhoenixdClient;
         public static PhoenixdClient PhoenixdClientInstance { get; private set; }
 
+        private string NormalizeChain(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            var normalized = new string(input
+                .ToLowerInvariant()
+                .Where(c => c >= 'a' && c <= 'z')
+                .ToArray());
+
+            return normalized;
+        }
+
         private async Task<LightningInvoice> ToLightningInvoice(string PaymentHash, CancellationToken cancellation)
         {
             GetIncomingPaymentResponse info = null;
@@ -175,7 +188,12 @@ namespace BTCPayServer.Lightning.Phoenixd
 
         public async Task<LightningNodeInformation> GetInfo(CancellationToken cancellation = default)
         {
+            var network = _network.ToString();
             var info = await _PhoenixdClient.GetInfo(cancellation);
+
+            if (NormalizeChain(network) != NormalizeChain(info.Chain))
+                throw new PhoenixdApiException { Error = new PhoenixdApiError { Error = $"Chain mismatch: BTCPay Server is using \"{network}\" while Phoenixd is configured for \"{info.Chain}\""} };
+
             var nodeInfo = new LightningNodeInformation
             {
                 BlockHeight = info.BlockHeight,
@@ -289,6 +307,18 @@ namespace BTCPayServer.Lightning.Phoenixd
             if (_password is { })
                 result += $";password={_password}";
             return result;
+        }
+
+        internal class PhoenixdApiException : Exception
+        {
+            public PhoenixdApiError Error { get; set; }
+
+            public override string Message => Error?.Error;
+        }
+
+        internal class PhoenixdApiError
+        {
+            public string Error { get; set; }
         }
     }
 }
