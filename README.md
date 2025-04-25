@@ -41,7 +41,7 @@ services:
     depends_on:
       - btcpayserver
     volumes:
-      - "phoenixd_datadir:/root/.phoenix"
+      - "phoenixd_datadir:/phoenix"
 volumes:
   phoenixd_datadir:
 ```
