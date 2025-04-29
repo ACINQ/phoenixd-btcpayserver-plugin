@@ -20,6 +20,18 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
+namespace BTCPayServer.Lightning.Phoenixd.ViewComponents
+{
+    public class PhoenixdNavItemViewComponent : ViewComponent
+    {
+        public async Task<IViewComponentResult> InvokeAsync()
+        {
+            bool isInitialized = PhoenixdLightningClient.PhoenixdClientInstance != null;
+            return View(isInitialized);
+        }
+    }
+}
+
 namespace BTCPayServer.Lightning.Phoenixd.Controllers
 {
     public class LightningPaymentViewModel
