@@ -44,6 +44,8 @@ services:
       - "phoenixd_datadir:/phoenix"
 volumes:
   phoenixd_datadir:
+exclusive:
+  - lightning
 ```
 Build docker fragment for `phoenixd`:
 ```shell
