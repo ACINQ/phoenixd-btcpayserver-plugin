@@ -17,16 +17,11 @@ public class PhoenixdPlugin : BaseBTCPayServerPlugin
 {
     public override IBTCPayServerPlugin.PluginDependency[] Dependencies { get; } =
     {
-        new IBTCPayServerPlugin.PluginDependency { Identifier = nameof(BTCPayServer), Condition = ">=2.0.0" }
+        new IBTCPayServerPlugin.PluginDependency { Identifier = nameof(BTCPayServer), Condition = ">=2.1.2" }
     };
 
     public override void Execute(IServiceCollection services)
     {
         services.AddUIExtension("header-nav", "PhoenixdNavItem");
-        services.AddSingleton<ILightningConnectionStringHandler>(sp =>
-        {
-            var httpClient = sp.GetRequiredService<HttpClient>();
-            return new PhoenixdConnectionStringHandler(httpClient);
-        });
     }
 }

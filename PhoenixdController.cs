@@ -1,4 +1,7 @@
+#nullable enable
+
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -20,14 +23,40 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
+public static class PhoenixdReflectionHelper
+{
+    public static object? GetPhoenixdClientInstance()
+    {
+        var lightningAssembly = AppDomain.CurrentDomain
+            .GetAssemblies()
+            .FirstOrDefault(a => {
+                var name = a.GetName()?.Name;
+                return name != null && name.Contains("BTCPayServer.Lightning.Phoenixd");
+        });
+        if (lightningAssembly == null)
+            return null;
+
+        var phoenixdLightningClientType = lightningAssembly.GetType("BTCPayServer.Lightning.Phoenixd.PhoenixdLightningClient");
+        if (phoenixdLightningClientType == null)
+            return null;
+
+        var instanceProp = phoenixdLightningClientType.GetProperty("PhoenixdClientInstance",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+        if (instanceProp == null)
+            return null;
+
+        return instanceProp.GetValue(null);
+    }
+}
+
 namespace BTCPayServer.Lightning.Phoenixd.ViewComponents
 {
     public class PhoenixdNavItemViewComponent : ViewComponent
     {
-        public async Task<IViewComponentResult> InvokeAsync()
+        public Task<IViewComponentResult> InvokeAsync()
         {
-            bool isInitialized = PhoenixdLightningClient.PhoenixdClientInstance != null;
-            return View(isInitialized);
+            bool isInitialized = PhoenixdReflectionHelper.GetPhoenixdClientInstance() != null;
+            return Task.FromResult((IViewComponentResult)View(isInitialized));
         }
     }
 }
@@ -37,7 +66,7 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
     public class LightningPaymentViewModel
     {
         [Required]
-        public string BitcoinAddress { get; set; }
+        public string BitcoinAddress { get; set; } = string.Empty;
 
         [Required]
         public long Amount { get; set; }
@@ -52,7 +81,7 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
     [Route("~/plugins/phoenixd")]
     public class PhoenixdController : Controller
     {
-        private readonly PhoenixdClient _phoenixdClient;
+        private readonly dynamic _phoenixdClient;
 
         private async Task<LightningPaymentViewModel> UpdateBalance(LightningPaymentViewModel model)
         {
@@ -72,7 +101,7 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
 
         public PhoenixdController()
         {
-            _phoenixdClient = PhoenixdLightningClient.PhoenixdClientInstance ?? throw new Exception("Uninitialized PhoenixdClient");
+            _phoenixdClient = PhoenixdReflectionHelper.GetPhoenixdClientInstance() ?? throw new Exception("Uninitialized PhoenixdClient");
         }
 
         [HttpGet("send")]
