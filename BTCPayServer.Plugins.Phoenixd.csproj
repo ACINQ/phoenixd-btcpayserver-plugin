@@ -30,7 +30,8 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <Folder Include="Views\" />
+    <Content Include="Views\**\*.cshtml" />
+    <Compile Include="*.cs" />
   </ItemGroup>
 
   <ItemGroup>
