@@ -1,7 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-  </PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
@@ -30,11 +27,6 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <Content Include="Views\**\*.cshtml" />
-    <Compile Include="*.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="btcpayserver\BTCPayServer\BTCPayServer.csproj" />
+    <ProjectReference Include="..\btcpayserver\BTCPayServer\BTCPayServer.csproj" />
   </ItemGroup>
 </Project>
