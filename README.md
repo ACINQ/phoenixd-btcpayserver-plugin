@@ -17,7 +17,7 @@ winget install --id Microsoft.DotNet.SDK.8 --source winget
 To build the plugin:
 ```shell
 git clone --recurse-submodules https://github.com/ACINQ/phoenixd-btcpayserver-plugin.git
-cd plugin
+cd ./phoenixd-btcpayserver-plugin/plugin/
 dotnet build --configuration Release -p:DebugType=None -p:DebugSymbols=false -p:DefineConstants="RAZOR_COMPILE_ON_BUILD"
 dotnet run --project ../btcpayserver/BTCPayServer.PluginPacker/BTCPayServer.PluginPacker.csproj -- ./bin/Release/net8.0/ BTCPayServer.Plugins.Phoenixd ./output
 ```
