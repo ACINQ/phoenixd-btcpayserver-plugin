@@ -6,20 +6,20 @@ This plugin enables on-chain payments in BTCPay Server when BTCPay is already co
 **phoenixd** is the server equivalent of the popular [phoenix wallet](https://github.com/ACINQ/phoenix) for mobile.
 
 ## Requirements
-- [BTCPay Server >= 2.1.2](https://github.com/btcpayserver)
+- [BTCPay Server >= 2.4.3](https://github.com/btcpayserver)
 - [phoenixd >= v0.5.0](https://github.com/ACINQ/phoenixd)
 
 ## Build for Windows 11
 If .NET is not yet installed:
 ```shell
-winget install --id Microsoft.DotNet.SDK.8 --source winget
+winget install --id Microsoft.DotNet.SDK.10 --source winget
 ```
 To build the plugin:
 ```shell
 git clone --recurse-submodules https://github.com/ACINQ/phoenixd-btcpayserver-plugin.git
 cd ./phoenixd-btcpayserver-plugin/plugin/
 dotnet build --configuration Release -p:DebugType=None -p:DebugSymbols=false -p:DefineConstants="RAZOR_COMPILE_ON_BUILD"
-dotnet run --project ../btcpayserver/BTCPayServer.PluginPacker/BTCPayServer.PluginPacker.csproj -- ./bin/Release/net8.0/ BTCPayServer.Plugins.Phoenixd ./output
+dotnet run --project ../btcpayserver/BTCPayServer.PluginPacker/BTCPayServer.PluginPacker.csproj -- ./bin/Release/net10.0/ BTCPayServer.Plugins.Phoenixd ./output
 ```
 The Phoenixd plugin should now be located in `./output/BTCPayServer.Plugins.Phoenixd/<VERSION>/`
 
