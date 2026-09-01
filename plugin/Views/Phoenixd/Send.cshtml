@@ -14,6 +14,7 @@
 }
 
 <form method="post" asp-action="send" novalidate>
+    @Html.AntiForgeryToken()
     <div class="form-group">
         <label asp-for="BitcoinAddress">Bitcoin address</label>
         <input asp-for="BitcoinAddress" name="BitcoinAddress" class="form-control" />
