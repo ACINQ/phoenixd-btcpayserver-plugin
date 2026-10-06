@@ -8,6 +8,10 @@ using System.IO.Compression;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using System.Text;
+using System.Text.Json;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -23,30 +27,112 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
-public static class PhoenixdReflectionHelper
+public sealed class PhoenixdApiClient
 {
-    public static object? GetPhoenixdClientInstance()
+    private readonly HttpClient _httpClient;
+
+    public PhoenixdApiClient()
     {
-        var lightningAssembly = AppDomain.CurrentDomain
-            .GetAssemblies()
-            .FirstOrDefault(a => {
-                var name = a.GetName()?.Name;
-                return name != null && name.Contains("BTCPayServer.Lightning.Phoenixd");
-        });
-        if (lightningAssembly == null)
-            return null;
+        var connectionString =
+            Environment.GetEnvironmentVariable("BTCPAY_BTCLIGHTNING")
+            ?? throw new InvalidOperationException(
+                "BTCPAY_BTCLIGHTNING is not configured.");
 
-        var phoenixdLightningClientType = lightningAssembly.GetType("BTCPayServer.Lightning.Phoenixd.PhoenixdLightningClient");
-        if (phoenixdLightningClientType == null)
-            return null;
+        var config = connectionString
+            .Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Split('=', 2))
+            .Where(x => x.Length == 2)
+            .ToDictionary(
+                x => x[0].Trim(),
+                x => x[1].Trim(),
+                StringComparer.OrdinalIgnoreCase);
 
-        var instanceProp = phoenixdLightningClientType.GetProperty("PhoenixdClientInstance",
-            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-        if (instanceProp == null)
-            return null;
+        if (!config.TryGetValue("type", out var type) ||
+            !string.Equals(type, "phoenixd",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "The internal Lightning node is not Phoenixd.");
+        }
 
-        return instanceProp.GetValue(null);
+        if (!config.TryGetValue("server", out var server))
+            throw new InvalidOperationException(
+                "Phoenixd server is missing from BTCPAY_BTCLIGHTNING.");
+
+        if (!config.TryGetValue("password", out var password))
+            throw new InvalidOperationException(
+                "Phoenixd password is missing from BTCPAY_BTCLIGHTNING.");
+
+        _httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(
+                server.TrimEnd('/') + "/")
+        };
+
+        var auth = Convert.ToBase64String(
+            Encoding.UTF8.GetBytes(":" + password));
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Basic", auth);
     }
+
+    public async Task<PhoenixdBalance> GetBalance()
+    {
+        using var response =
+            await _httpClient.GetAsync("getbalance");
+
+        var content =
+            await response.Content.ReadAsStringAsync();
+
+        response.EnsureSuccessStatusCode();
+
+        return JsonSerializer.Deserialize<PhoenixdBalance>(
+                   content,
+                   new JsonSerializerOptions
+                   {
+                       PropertyNameCaseInsensitive = true
+                   })
+               ?? throw new InvalidOperationException(
+                   "Invalid response from phoenixd/getbalance.");
+    }
+
+    public async Task<string> SendPayment(
+        string bitcoinAddress,
+        long amountSat,
+        long feerateSatByte)
+    {
+        var form = new Dictionary<string, string>
+        {
+            ["address"] = bitcoinAddress,
+            ["amountSat"] = amountSat.ToString(
+                System.Globalization.CultureInfo.InvariantCulture),
+            ["feerateSatByte"] = feerateSatByte.ToString(
+                System.Globalization.CultureInfo.InvariantCulture)
+        };
+
+        using var response =
+            await _httpClient.PostAsync(
+                "sendtoaddress",
+                new FormUrlEncodedContent(form));
+
+        var content =
+            (await response.Content.ReadAsStringAsync()).Trim();
+
+        response.EnsureSuccessStatusCode();
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(
+                content,
+                @"^[0-9a-fA-F]{64}$"))
+            throw new InvalidOperationException(content);
+
+        return content;
+    }
+}
+
+public sealed class PhoenixdBalance
+{
+    public long BalanceSat { get; set; }
+    public long FeeCreditSat { get; set; }
 }
 
 namespace BTCPayServer.Lightning.Phoenixd.ViewComponents
@@ -55,8 +141,18 @@ namespace BTCPayServer.Lightning.Phoenixd.ViewComponents
     {
         public Task<IViewComponentResult> InvokeAsync()
         {
-            bool isInitialized = PhoenixdReflectionHelper.GetPhoenixdClientInstance() != null;
-            return Task.FromResult((IViewComponentResult)View(isInitialized));
+            var connectionString =
+                Environment.GetEnvironmentVariable(
+                    "BTCPAY_BTCLIGHTNING");
+
+            var isPhoenixd =
+                !string.IsNullOrEmpty(connectionString) &&
+                connectionString.Contains(
+                    "type=phoenixd",
+                    StringComparison.OrdinalIgnoreCase);
+
+            return Task.FromResult(
+                (IViewComponentResult)View(isPhoenixd));
         }
     }
 }
@@ -79,6 +175,7 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
     }
 
     [Route("~/plugins/phoenixd")]
+    [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class PhoenixdController : Controller
     {
         private readonly dynamic _phoenixdClient;
@@ -101,7 +198,7 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
 
         public PhoenixdController()
         {
-            _phoenixdClient = PhoenixdReflectionHelper.GetPhoenixdClientInstance() ?? throw new Exception("Uninitialized PhoenixdClient");
+            _phoenixdClient = new PhoenixdApiClient();
         }
 
         [HttpGet("send")]
@@ -111,6 +208,7 @@ namespace BTCPayServer.Lightning.Phoenixd.Controllers
         }
 
         [HttpPost("send")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Send(LightningPaymentViewModel model)
         {
             if (!ModelState.IsValid)
